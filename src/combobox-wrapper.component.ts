@@ -5,9 +5,8 @@ import { ComboboxOptionComponent } from './combobox-option.component.ts';
 export class ComboboxWrapperComponent extends HTMLElement {
 
   // @ts-ignore
-  #options: NodeListOf<ComboboxOptionComponent>;
-  #selectedOption: string  = '';
-  #activeIndex: number | null  = null;
+  #optionElems: NodeListOf<ComboboxOptionComponent>;
+  #selectedOption: ComboboxOptionComponent | null  = null;
   #isOpen: boolean = false;
 
   #comboboxInputElem: HTMLElement | null = null;
@@ -24,8 +23,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
   private get template(): HTMLTemplateElement {
     const template = document.createElement('template');
-
-    let rawTemplate = `
+    template.innerHTML = `
 			  <div 
 			    class="combobox__label" 
 					id="combobox__id-label">
@@ -41,7 +39,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
 					aria-expanded="false" 
 					aria-haspopup="listbox" 
 					aria-labelledby="combobox__id-label" >
-					${this.#selectedOption || this.comboPlaceholder}
+					${this.comboPlaceholder}
 				</div>
 				
 				<div 
@@ -50,18 +48,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
 					role="listbox" 
 					tabindex="-1"
 					aria-labelledby="combobox__id-label" >
+				</div>
 		`
-
-    if (this.#options?.length > 0) {
-      for (let option of this.#options) {
-        rawTemplate += option.outerHTML
-      }
-    }
-
-    rawTemplate += `</div>`
-
-
-    template.innerHTML = rawTemplate;
     return template;
   }
 
@@ -162,10 +150,10 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private initComboboxOptions() {
-   this.#options = this.querySelectorAll<ComboboxOptionComponent>("combobox-option");
+   this.#optionElems = this.querySelectorAll<ComboboxOptionComponent>("combobox-option");
 
-   console.log('this.#options', this.#options)
-    return Array.from(this.#options)
+   console.log('this.#options', this.#optionElems)
+    return Array.from(this.#optionElems)
   }
 
   protected connectedCallback() {
@@ -179,6 +167,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
     shadowRoot.appendChild(this.styles);
     shadowRoot.appendChild(this.template.content.cloneNode(true));
     this.initElems();
+    this.addOptions();
     this.addEventsToElements();
   }
 
@@ -186,6 +175,14 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.#comboboxInputElem = this.shadowRoot?.getElementById('combobox__id-input') ?? null;
     this.#comboboxLabelElem = this.shadowRoot?.getElementById('combobox__id-label') ?? null;
     this.#comboboxListBoxElem = this.shadowRoot?.getElementById('combobox__id-list-box') ?? null;
+  }
+
+  private addOptions(): void {
+    if (this.#optionElems?.length > 0) {
+      for (let option of this.#optionElems) {
+        this.#comboboxListBoxElem?.appendChild(option)
+      }
+    }
   }
 
   private addEventsToElements(): void {
@@ -211,6 +208,10 @@ export class ComboboxWrapperComponent extends HTMLElement {
       'focusout',
       this.onComboboxBlurClick.bind(this)
     );
+
+    this.#optionElems.forEach((option) => {
+      option.addEventListener('click', this.onOptionClick(option).bind(this));
+    })
   }
 
   private updateMenuState(shouldOpen: boolean, callFocus = true): void {
@@ -272,7 +273,6 @@ export class ComboboxWrapperComponent extends HTMLElement {
     }
 
     if (this.#isOpen) {
-      // this.selectOption(this.#activeIndex);
       this.updateMenuState(false, false);
     }
   }
@@ -280,6 +280,22 @@ export class ComboboxWrapperComponent extends HTMLElement {
   private onComboboxLabelClick(): void {
     this.#comboboxInputElem?.focus();
   }
+
+  private onOptionClick(option: ComboboxOptionComponent) {
+    return (event: MouseEvent) => {
+      event.stopPropagation();
+      this.onOptionChange(option);
+      this.updateMenuState(false);
+    }
+  }
+
+  private onOptionChange(option: ComboboxOptionComponent) {
+    this.#comboboxInputElem?.setAttribute('aria-activedescendant', option.id);
+    this.#selectedOption?.setSelected(false);
+    option.setSelected(true);
+    this.#selectedOption = option;
+    this.#comboboxInputElem!.innerHTML = option.innerHTML;
+  };
 }
 
 customElements.define("combobox-wrapper", ComboboxWrapperComponent);

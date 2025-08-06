@@ -1,9 +1,8 @@
 export class ComboboxOptionComponent extends HTMLElement {
-
-  #isSelected: boolean = false;
+  isSelected: boolean = false;
 
   static get observedAttributes() {
-    return ['selected']
+    return ['key']
   }
 
   attributeChangedCallback(
@@ -12,8 +11,8 @@ export class ComboboxOptionComponent extends HTMLElement {
     newValue: string | null
   ): void {
     switch (name) {
-      case 'selected':
-        this.#isSelected = newValue === 'true' || newValue === '';
+      case 'key':
+        if(newValue) this.id = newValue;
         break;
     }
   }
@@ -22,8 +21,9 @@ export class ComboboxOptionComponent extends HTMLElement {
     super();
   }
 
-  public toggleSelected(): void {
-    this.#isSelected = !this.#isSelected;
+  public setSelected(selected: boolean): void {
+    this.isSelected = selected;
+    this.setAttribute('aria-selected', `${selected}`);
   }
 
   private get template(): HTMLTemplateElement {
@@ -80,7 +80,7 @@ export class ComboboxOptionComponent extends HTMLElement {
     shadowRoot.appendChild(this.template.content.cloneNode(true));
 
     this.setAttribute('role', 'option');
-    this.setAttribute('aria-selected', `${this.#isSelected}`);
+    this.setAttribute('aria-selected', `${this.isSelected}`);
   }
 
 
