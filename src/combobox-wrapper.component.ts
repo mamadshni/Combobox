@@ -183,6 +183,9 @@ export class ComboboxWrapperComponent extends HTMLElement {
     for (let option of this.#optionElems) {
       this.#comboboxListBoxElem.appendChild(option)
     }
+
+    this.#focusedOptionElem = this.#optionElems[this.#focusedOptionIndex];
+    this.#focusedOptionElem.classList.add('combobox__current')
   }
 
   private addEventsToElements(): void {
@@ -299,11 +302,12 @@ export class ComboboxWrapperComponent extends HTMLElement {
   private onOptionChange(index: number) {
     assertExistElements(this.#optionElems);
     assertExistElements(this.#comboboxInputElem);
+    assertExistElements(this.#focusedOptionElem);
 
     const option = this.#optionElems[index];
 
     this.#comboboxInputElem.setAttribute('aria-activedescendant', option.id);
-    this.#focusedOptionElem?.classList.remove('combobox__current');
+    this.#focusedOptionElem.classList.remove('combobox__current');
     this.#focusedOptionElem = option;
     this.#focusedOptionIndex = index;
     this.#focusedOptionElem.classList.add('combobox__current');
