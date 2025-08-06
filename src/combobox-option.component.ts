@@ -41,7 +41,7 @@ export class ComboboxOptionComponent extends HTMLElement {
 		  	padding: 10px 12px 12px;
 		  }
   
-		  :host:hover {
+		  :host(:hover) {
 		  	background-color: rgb(0 0 0 / 10%);
 		  }
   

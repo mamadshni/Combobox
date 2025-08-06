@@ -1,19 +1,11 @@
 import { SelectActions } from './combobox.model.ts';
 
-export function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 const KeyEventsMapper: Record<KeyboardEvent['key'], SelectActions> = {
-  Home: SelectActions.First,
-  End: SelectActions.Last,
-  PageUp: SelectActions.PageUp,
-  PageDown: SelectActions.PageDown,
-  Escape: SelectActions.Close,
+  'Home': SelectActions.First,
+  'End': SelectActions.Last,
+  'PageUp': SelectActions.PageUp,
+  'PageDown': SelectActions.PageDown,
+  'Escape': SelectActions.Close,
 };
 
 const openKeys: KeyboardEvent['key'][] = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
@@ -53,4 +45,76 @@ export function getActionFromKey(event: KeyboardEvent, menuOpen: boolean): Selec
   }
 
   return SelectActions.Close;
+}
+
+export function getUpdatedIndex(
+  currentIndex: number,
+  maxIndex: number,
+  action: SelectActions
+  ) {
+  const pageSize = 10;
+
+  switch (action) {
+    case SelectActions.First:
+      return 0;
+    case SelectActions.Last:
+      return maxIndex;
+    case SelectActions.Previous:
+      return Math.max(0, currentIndex - 1);
+    case SelectActions.Next:
+      return Math.min(maxIndex, currentIndex + 1);
+    case SelectActions.PageUp:
+      return Math.max(0, currentIndex - pageSize);
+    case SelectActions.PageDown:
+      return Math.min(maxIndex, currentIndex + pageSize);
+    default:
+      return currentIndex;
+  }
+}
+
+export function isScrollable(element: HTMLElement | null) {
+  return element && element.clientHeight < element.scrollHeight;
+}
+
+export function isElementInView(element: HTMLElement | null) {
+  if (!element) return false;
+
+  const bounding = element.getBoundingClientRect();
+
+  return (
+    bounding.top >= 0 &&
+    bounding.left >= 0 &&
+    bounding.bottom <=
+    (window.innerHeight || document.documentElement.clientHeight) &&
+    bounding.right <=
+    (window.innerWidth || document.documentElement.clientWidth)
+  );
+}
+
+export function maintainScrollVisibility(activeElement: HTMLElement | null, scrollParent: HTMLElement | null) {
+  if (!activeElement || !scrollParent) return;
+
+  const { offsetHeight, offsetTop } = activeElement;
+  const { offsetHeight: parentOffsetHeight, scrollTop } = scrollParent;
+
+  const isAbove = offsetTop < scrollTop;
+  const isBelow = offsetTop + offsetHeight > scrollTop + parentOffsetHeight;
+
+  if (isAbove) {
+    scrollParent.scrollTo(0, offsetTop);
+  } else if (isBelow) {
+    scrollParent.scrollTo(0, offsetTop - parentOffsetHeight + offsetHeight);
+  }
+}
+
+export function assertExistElements<T extends HTMLElement>(
+  element: T | NodeListOf<T> | null
+): asserts element is T | NodeListOf<T> {
+  if (!element) {
+    throw new Error('Expected element(s) to exist, but got null.');
+  }
+
+  if (element instanceof NodeList && element.length === 0) {
+    throw new Error('Expected NodeList to contain at least one element, but it was empty.');
+  }
 }
