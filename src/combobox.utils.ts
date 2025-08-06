@@ -1,24 +1,20 @@
 import { SelectActions } from './combobox.model.ts';
 
-const KeyEventsMapper: Record<KeyboardEvent['key'], SelectActions> = {
-  'Home': SelectActions.First,
-  'End': SelectActions.Last,
-  'PageUp': SelectActions.PageUp,
-  'PageDown': SelectActions.PageDown,
-  'Escape': SelectActions.Close,
-};
-
-const openKeys: KeyboardEvent['key'][] = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
-
-export function getActionFromKey(event: KeyboardEvent, menuOpen: boolean): SelectActions {
+export function getActionFromKey(event: KeyboardEvent, menuOpen: boolean): SelectActions | undefined {
   const { key, altKey, ctrlKey, metaKey } = event;
+
+  const openKeys: KeyboardEvent['key'][] = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
 
   if (!menuOpen && openKeys.includes(key)) {
     return SelectActions.Open;
   }
 
-  if (KeyEventsMapper[key]) {
-    return KeyEventsMapper[key];
+  if (key === 'Home') {
+      return SelectActions.First;
+  }
+
+  if (key === 'End') {
+      return SelectActions.Last;
   }
 
   const isPrintableChar = key.length === 1 && key !== ' ' && !altKey && !ctrlKey && !metaKey;
@@ -39,12 +35,24 @@ export function getActionFromKey(event: KeyboardEvent, menuOpen: boolean): Selec
       return SelectActions.Previous;
     }
 
+    if (key === 'PageUp') {
+        return SelectActions.PageUp;
+    }
+
+    if (key === 'PageDown') {
+        return SelectActions.PageDown;
+    }
+
+    if (key === 'Escape') {
+        return SelectActions.Close;
+    }
+
     if (key === 'Enter' || key === ' ') {
       return SelectActions.CloseSelect;
     }
   }
 
-  return SelectActions.Close;
+  return undefined;
 }
 
 export function getUpdatedIndex(
