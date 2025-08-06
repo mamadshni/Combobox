@@ -1,10 +1,26 @@
 export class ComboboxOptionComponent extends HTMLElement {
+
   #isSelected: boolean = false;
+
+  static get observedAttributes() {
+    return ['selected']
+  }
+
+  attributeChangedCallback(
+    name: string,
+    _oldValue: string | null,
+    newValue: string | null
+  ): void {
+    switch (name) {
+      case 'selected':
+        this.#isSelected = newValue === 'true' || newValue === '';
+        break;
+    }
+  }
 
   public constructor() {
     super();
   }
-
 
   public toggleSelected(): void {
     this.#isSelected = !this.#isSelected;
@@ -53,7 +69,6 @@ export class ComboboxOptionComponent extends HTMLElement {
     `;
     return style;
   }
-
 
   protected connectedCallback() {
     this.render()

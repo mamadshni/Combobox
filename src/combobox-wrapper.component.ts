@@ -7,9 +7,12 @@ export class ComboboxWrapperComponent extends HTMLElement {
   // @ts-ignore
   #options: NodeListOf<ComboboxOptionComponent>;
   #selectedOption: string  = '';
+  #activeIndex: number | null  = null;
   #isOpen: boolean = false;
 
-  #comboboxSelectInputElem: HTMLElement | null = null;
+  #comboboxInputElem: HTMLElement | null = null;
+  #comboboxLabelElem: HTMLElement | null = null;
+  #comboboxListBoxElem: HTMLElement | null = null;
 
   static get observedAttributes() {
     return ['label', 'placeholder']
@@ -23,27 +26,30 @@ export class ComboboxWrapperComponent extends HTMLElement {
     const template = document.createElement('template');
 
     let rawTemplate = `
-			  <div class="combobox__label">
+			  <div 
+			    class="combobox__label" 
+					id="combobox__id-label">
 				  ${this.comboLabel}
 				</div>
 				
   			<div 
 					class="combobox__input" 
-					id="combobox__select-input"
+					id="combobox__id-input"
 					role="combobox" 
 					tabindex="0"
-					aria-controls="listbox1" 
+					aria-controls="combobox__id-list-box" 
 					aria-expanded="false" 
 					aria-haspopup="listbox" 
-					aria-labelledby="combo1-label" >
+					aria-labelledby="combobox__id-label" >
 					${this.#selectedOption || this.comboPlaceholder}
 				</div>
 				
 				<div 
 					class="combobox__menu" 
+					id="combobox__id-list-box"
 					role="listbox" 
 					tabindex="-1"
-					aria-labelledby="combo1-label" >
+					aria-labelledby="combobox__id-label" >
 		`
 
     if (this.#options?.length > 0) {
@@ -177,22 +183,34 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private initElems(): void {
-    this.#comboboxSelectInputElem = this.shadowRoot?.getElementById('combobox__select-input') ?? null;
+    this.#comboboxInputElem = this.shadowRoot?.getElementById('combobox__id-input') ?? null;
+    this.#comboboxLabelElem = this.shadowRoot?.getElementById('combobox__id-label') ?? null;
+    this.#comboboxListBoxElem = this.shadowRoot?.getElementById('combobox__id-list-box') ?? null;
   }
 
   private addEventsToElements(): void {
-    this.#comboboxSelectInputElem?.addEventListener(
+    this.#comboboxInputElem?.addEventListener(
       'click',
       this.onComboboxSelectInputClick.bind(this)
     );
-    this.#comboboxSelectInputElem?.addEventListener(
+    this.#comboboxInputElem?.addEventListener(
       'keydown',
       this.onComboboxSelectInputKeydown.bind(this)
     );
+    this.#comboboxInputElem?.addEventListener(
+      'blur',
+      this.onComboboxBlurClick.bind(this)
+    );
 
-    // this.labelEl.addEventListener('click', this.onLabelClick.bind(this));
-    // this.comboEl.addEventListener('blur', this.onComboBlur.bind(this));
-    // this.listboxEl.addEventListener('focusout', this.onComboBlur.bind(this));
+    this.#comboboxLabelElem?.addEventListener(
+      'click',
+      this.onComboboxLabelClick.bind(this)
+    );
+
+    this.#comboboxListBoxElem?.addEventListener(
+      'focusout',
+      this.onComboboxBlurClick.bind(this)
+    );
   }
 
   private updateMenuState(shouldOpen: boolean, callFocus = true): void {
@@ -202,11 +220,11 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
     this.#isOpen = shouldOpen;
 
-    this.#comboboxSelectInputElem?.setAttribute('aria-expanded', `${shouldOpen}`);
+    this.#comboboxInputElem?.setAttribute('aria-expanded', `${shouldOpen}`);
     shouldOpen ? this.classList.add('open') : this.classList.remove('open');
 
-    callFocus && this.#comboboxSelectInputElem?.focus();
-  };
+    callFocus && this.#comboboxInputElem?.focus();
+  }
 
   private onComboboxSelectInputClick(): void {
     this.updateMenuState(!this.#isOpen, false);
@@ -245,6 +263,22 @@ export class ComboboxWrapperComponent extends HTMLElement {
         event.preventDefault();
         return this.updateMenuState(true);
     }
+  }
+
+  private onComboboxBlurClick(event: FocusEvent): void {
+    // @ts-ignore
+    if (this.#comboboxListBoxElem?.contains(event.relatedTarget)) {
+      return;
+    }
+
+    if (this.#isOpen) {
+      // this.selectOption(this.#activeIndex);
+      this.updateMenuState(false, false);
+    }
+  }
+
+  private onComboboxLabelClick(): void {
+    this.#comboboxInputElem?.focus();
   }
 }
 
