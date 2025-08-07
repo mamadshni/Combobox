@@ -23,6 +23,9 @@ export class ComboboxWrapperComponent extends HTMLElement {
   #focusedOptionElem: ComboboxOptionComponent | null  = null;
   #optionElems: NodeListOf<ComboboxOptionComponent> | null = null;
 
+  #searchString = '';
+  #debounceRef: ReturnType<typeof setTimeout> | null = null;
+
   private get comboboxInputElem() {
     assertExistElements(this.#comboboxInputElem);
     return this.#comboboxInputElem;
@@ -203,13 +206,20 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
     this.#optionElems = this.querySelectorAll<ComboboxOptionComponent>("combobox-option");
 
-    this.#optionInnerTexts = [...this.optionElems].map(option => option.innerText);
-    for (let option of this.#optionElems) {
-      this.comboboxListBoxElem.appendChild(option);
+    if (!this.#optionElems.length) {
+      this.disableCombobox();
+      return;
+    }
+    else {
+      this.#optionInnerTexts = [...this.#optionElems].map(option => option.textContent);
+      for (let option of this.#optionElems) {
+        this.comboboxListBoxElem.appendChild(option);
+      }
+
+      this.#focusedOptionElem = this.#optionElems[this.#focusedOptionIndex];
+      this.#focusedOptionElem.classList.add('combobox__current');
     }
 
-    this.#focusedOptionElem = this.optionElems[this.#focusedOptionIndex];
-    this.#focusedOptionElem.classList.add('combobox__current');
   }
 
   private addEventsToElements(): void {
@@ -239,6 +249,19 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.optionElems.forEach((option, index) => {
       option.addEventListener('click', this.onOptionClick(index).bind(this));
     })
+
+    this.addEventListener('combobox-select', (event: Event) => {
+      const customEvent = event as CustomEvent<{ key: string; value: string }>;
+      console.log('Option selected:', customEvent.detail);
+
+      this.dispatchEvent(new CustomEvent('selected', {
+        detail: customEvent.detail,
+      }));
+    });
+  }
+
+  private disableCombobox(): void {
+    this.setAttribute('aria-disabled', 'true');
   }
 
   private updateMenuState(shouldOpen: boolean, callFocus = true): void {
@@ -335,41 +358,30 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.#selectedOptionElem?.setSelected(false);
     option.setSelected(true);
     this.#selectedOptionElem = option;
-    this.comboboxInputElem.innerHTML = option.innerHTML;
+    this.comboboxInputElem.textContent = option.textContent;
+
   };
 
   private onComboboxType(letter: string): void {
-    this.findOptionByType(letter);
+    this.updateMenuState(true);
+
+    this.#searchString += letter;
+    if (this.#debounceRef) clearTimeout(this.#debounceRef);
+    this.#debounceRef = setTimeout(() => {
+      this.#searchString = '';
+      this.#debounceRef = null;
+    }, 500);
+
+    const searchIndex = getIndexByLetter(
+      this.#optionInnerTexts,
+      this.#searchString,
+      this.#focusedOptionIndex + 1
+    );
+
+    if (searchIndex >= 0) {
+      this.onOptionChange(searchIndex);
+    }
   }
-
-  private findOptionByType = (() => {
-    let searchString = '';
-    let debounceRef: ReturnType<typeof setTimeout> | null = null;
-    return (letter: string) => {
-
-      this.updateMenuState(true);
-      searchString += letter;
-
-      if (debounceRef !== null) {
-        clearTimeout(debounceRef);
-      }
-
-      debounceRef = setTimeout(() => {
-        searchString = '';
-        debounceRef = null;
-      }, 500);
-
-      const searchIndex = getIndexByLetter(
-        this.#optionInnerTexts,
-        searchString,
-        this.#focusedOptionIndex + 1
-      );
-
-      if (searchIndex >= 0) {
-        this.onOptionChange(searchIndex);
-      }
-    };
-  })()
 }
 
 customElements.define("combobox-wrapper", ComboboxWrapperComponent);

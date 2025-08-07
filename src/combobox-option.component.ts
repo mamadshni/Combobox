@@ -1,29 +1,28 @@
 export class ComboboxOptionComponent extends HTMLElement {
   isSelected: boolean = false;
 
-  static get observedAttributes() {
-    return ['key']
-  }
-
-  attributeChangedCallback(
-    name: string,
-    _oldValue: string | null,
-    newValue: string | null
-  ): void {
-    switch (name) {
-      case 'key':
-        if(newValue) this.id = newValue;
-        break;
-    }
-  }
-
   public constructor() {
     super();
+    this.id = this.dataset.key || crypto.randomUUID();
   }
 
   public setSelected(selected: boolean): void {
     this.isSelected = selected;
     this.setAttribute('aria-selected', `${selected}`);
+    this.classList.toggle('combobox__selected', selected);
+
+    if (selected) {
+      this.dispatchEvent(
+        new CustomEvent('combobox-select', {
+          bubbles: true,
+          composed: true,
+          detail: {
+            key: this.id,
+            value: this.textContent?.trim() ?? '',
+          },
+        })
+      );
+    }
   }
 
   private get template(): HTMLTemplateElement {
