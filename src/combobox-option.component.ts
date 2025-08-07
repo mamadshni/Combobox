@@ -65,6 +65,15 @@ export class ComboboxOptionComponent extends HTMLElement {
 		  	transform: translate(0, -50%) rotate(45deg);
 		  	width: 8px;
 		  }
+		  
+		  :host(.disabled) {
+        background-color: #f0f0f0;
+        color: #999;
+        border: 1px solid #ccc;
+        cursor: not-allowed;
+        pointer-events: none;
+        user-select: none;
+      }
     `;
     return style;
   }

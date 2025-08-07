@@ -54,6 +54,10 @@ export class ComboboxWrapperComponent extends HTMLElement {
     return [...this.optionElems].map(o => o.textContent?.trim() || '');
   }
 
+  private get isDisabled(): boolean {
+    return this.hasAttribute('disabled');
+  }
+
   static get observedAttributes() {
     return ['label', 'placeholder']
   }
@@ -178,6 +182,11 @@ export class ComboboxWrapperComponent extends HTMLElement {
 		  display: flex;
       flex-direction: column;
 		}
+
+    :host([disabled]) {
+      opacity: 0.6;
+      pointer-events: none;
+    }
     `;
     return style;
   }
@@ -208,6 +217,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.#comboboxListBoxElem = this.shadowRoot?.getElementById('combobox__id-list-box') ?? null;
 
     this.#optionElems = this.querySelectorAll<ComboboxOptionComponent>("combobox-option");
+
+    this.applyDisabledState();
 
     if (!this.#optionElems.length) {
       this.disableCombobox();
@@ -258,8 +269,25 @@ export class ComboboxWrapperComponent extends HTMLElement {
     });
   }
 
-  private disableCombobox(): void {
+  private applyDisabledState(): void {
+    if (this.isDisabled) {
+      this.disableCombobox()
+    } else {
+      this.enableCombobox()
+    }
+  }
+
+  private disableCombobox() {
+    this.comboboxInputElem.setAttribute('aria-disabled', 'true');
+    this.comboboxInputElem.setAttribute('tabindex', '-1');
+    this.comboboxInputElem.classList.add('disabled');
     this.setAttribute('aria-disabled', 'true');
+  }
+  private enableCombobox() {
+    this.comboboxInputElem.setAttribute('aria-disabled', 'false');
+    this.comboboxInputElem.setAttribute('tabindex', '0');
+    this.comboboxInputElem.classList.remove('disabled');
+    this.removeAttribute('aria-disabled');
   }
 
   private updateMenuState(shouldOpen: boolean, callFocus = true): void {
@@ -276,10 +304,14 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxSelectInputClick(): void {
+    if (this.isDisabled) return;
+
     this.updateMenuState(!this.#isOpen, false);
   }
 
   private onComboboxSelectInputKeydown(event: KeyboardEvent): void {
+    if (this.isDisabled) return;
+
     const { key } = event;
     const max = this.optionElems.length - 1;
     const action = getActionFromKey(event, this.#isOpen);
@@ -311,6 +343,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxBlurClick(event: FocusEvent): void {
+    if (this.isDisabled) return;
+
     // @ts-ignore
     if (this.comboboxListBoxElem.contains(event.relatedTarget)) {
       return;
@@ -323,6 +357,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxLabelClick(): void {
+    if (this.isDisabled) return;
+
     this.comboboxInputElem.focus();
   }
 
