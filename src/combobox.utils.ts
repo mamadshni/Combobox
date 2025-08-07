@@ -81,11 +81,12 @@ export function getUpdatedIndex(
 }
 
 export function isScrollable(element: HTMLElement | null) {
-  return element && element.clientHeight < element.scrollHeight;
+  assertExistElements(element);
+  return element.clientHeight < element.scrollHeight;
 }
 
 export function isElementInView(element: HTMLElement | null) {
-  if (!element) return false;
+  assertExistElements(element);
 
   const bounding = element.getBoundingClientRect();
 
@@ -100,7 +101,8 @@ export function isElementInView(element: HTMLElement | null) {
 }
 
 export function maintainScrollVisibility(activeElement: HTMLElement | null, scrollParent: HTMLElement | null) {
-  if (!activeElement || !scrollParent) return;
+  assertExistElements(activeElement);
+  assertExistElements(scrollParent);
 
   const { offsetHeight, offsetTop } = activeElement;
   const { offsetHeight: parentOffsetHeight, scrollTop } = scrollParent;
