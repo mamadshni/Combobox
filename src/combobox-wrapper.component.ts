@@ -262,11 +262,6 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.optionElems.forEach((option, index) => {
       option.addEventListener('click', this.onOptionClick(index).bind(this));
     })
-
-    this.addEventListener('combobox-select', (event: Event) => {
-      const { detail } = event as CustomEvent<{ key: string; value: string }>;
-      this.dispatchEvent(new CustomEvent('selected', { detail }));
-    });
   }
 
   private applyDisabledState(): void {
@@ -392,7 +387,18 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.#selectedOptionElem?.setSelected(false);
     option.setSelected(true);
     this.#selectedOptionElem = option;
-    this.comboboxInputElem.textContent = option.textContent;
+    this.comboboxInputElem.textContent = option.textContent.trim();
+
+    this.dispatchEvent(
+      new CustomEvent('selected', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          key: option.id,
+          value: option.textContent.trim(),
+        },
+      })
+    );
 
   };
 
