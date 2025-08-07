@@ -11,7 +11,6 @@ import { ComboboxOptionComponent } from './combobox-option.component.ts';
 
 export class ComboboxWrapperComponent extends HTMLElement {
 
-  #optionInnerTexts: string[] = [];
   #focusedOptionIndex: number = 0;
   #isOpen: boolean = false;
 
@@ -49,6 +48,10 @@ export class ComboboxWrapperComponent extends HTMLElement {
   private get optionElems() {
     assertExistElements(this.#optionElems);
     return this.#optionElems;
+  }
+
+  private get optionInnerTexts(): string[] {
+    return [...this.optionElems].map(o => o.textContent?.trim() || '');
   }
 
   static get observedAttributes() {
@@ -211,7 +214,6 @@ export class ComboboxWrapperComponent extends HTMLElement {
       return;
     }
     else {
-      this.#optionInnerTexts = [...this.#optionElems].map(option => option.textContent);
       for (let option of this.#optionElems) {
         this.comboboxListBoxElem.appendChild(option);
       }
@@ -251,12 +253,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
     })
 
     this.addEventListener('combobox-select', (event: Event) => {
-      const customEvent = event as CustomEvent<{ key: string; value: string }>;
-      console.log('Option selected:', customEvent.detail);
-
-      this.dispatchEvent(new CustomEvent('selected', {
-        detail: customEvent.detail,
-      }));
+      const { detail } = event as CustomEvent<{ key: string; value: string }>;
+      this.dispatchEvent(new CustomEvent('selected', { detail }));
     });
   }
 
@@ -373,7 +371,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
     }, 500);
 
     const searchIndex = getIndexByLetter(
-      this.#optionInnerTexts,
+      this.optionInnerTexts,
       this.#searchString,
       this.#focusedOptionIndex + 1
     );

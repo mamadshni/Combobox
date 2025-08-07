@@ -30,5 +30,10 @@
 </combobox-wrapper>
 
 <script type="module" src="/src/main.ts"></script>
+<script>
+    document.querySelector('combobox-wrapper').addEventListener('selected', e => {
+        console.log('Selected item:', e.detail);
+    });
+</script>
 </body>
 </html>
