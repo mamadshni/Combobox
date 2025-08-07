@@ -126,3 +126,30 @@ export function assertExistElements<T extends HTMLElement>(
     throw new Error('Expected NodeList to contain at least one element, but it was empty.');
   }
 }
+
+export function getIndexByLetter(options: string[], filter: string, startIndex = 0) {
+  const orderedOptions = [
+    ...options.slice(startIndex),
+    ...options.slice(0, startIndex),
+  ];
+  const matches = filterOptions(orderedOptions, filter);
+  if (matches.length > 0) {
+    return options.indexOf(matches[0]);
+  }
+
+  if (allSameLetter(filter.split(''))) {
+    const matches = filterOptions(orderedOptions, filter[0]);
+    if (matches.length > 0) {
+      return options.indexOf(matches[0]);
+    }
+  }
+
+  return -1;
+}
+
+const allSameLetter = (array: string[]) => array.every((letter) => letter === array[0]);
+
+const filterOptions =  (options: string[] = [], filter: string) =>
+    options.filter((option) =>  option.toLowerCase().indexOf(filter.toLowerCase()) === 0)
+
+
