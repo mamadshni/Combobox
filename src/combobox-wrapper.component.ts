@@ -11,16 +11,42 @@ import { ComboboxOptionComponent } from './combobox-option.component.ts';
 
 export class ComboboxWrapperComponent extends HTMLElement {
 
-  #optionElems: NodeListOf<ComboboxOptionComponent> | null = null;
   #optionInnerTexts: string[] = [];
-  #selectedOptionElem: ComboboxOptionComponent | null  = null;
-  #focusedOptionElem: ComboboxOptionComponent | null  = null;
   #focusedOptionIndex: number = 0;
   #isOpen: boolean = false;
 
   #comboboxInputElem: HTMLElement | null = null;
   #comboboxLabelElem: HTMLElement | null = null;
   #comboboxListBoxElem: HTMLElement | null = null;
+
+  #selectedOptionElem: ComboboxOptionComponent | null  = null;
+  #focusedOptionElem: ComboboxOptionComponent | null  = null;
+  #optionElems: NodeListOf<ComboboxOptionComponent> | null = null;
+
+  private get comboboxInputElem() {
+    assertExistElements(this.#comboboxInputElem);
+    return this.#comboboxInputElem;
+  }
+
+  private get comboboxLabelElem() {
+    assertExistElements(this.#comboboxLabelElem);
+    return this.#comboboxLabelElem;
+  }
+
+  private get comboboxListBoxElem() {
+    assertExistElements(this.#comboboxListBoxElem);
+    return this.#comboboxListBoxElem;
+  }
+
+  private get focusedOptionElem() {
+    assertExistElements(this.#focusedOptionElem);
+    return this.#focusedOptionElem;
+  }
+
+  private get optionElems() {
+    assertExistElements(this.#optionElems);
+    return this.#optionElems;
+  }
 
   static get observedAttributes() {
     return ['label', 'placeholder']
@@ -166,77 +192,66 @@ export class ComboboxWrapperComponent extends HTMLElement {
     const shadowRoot = this.attachShadow({ mode: 'open' });
     shadowRoot.appendChild(this.styles);
     shadowRoot.appendChild(this.template.content.cloneNode(true));
-    this.initElems();
-    this.addOptions();
+    this.init();
     this.addEventsToElements();
   }
 
-  private initElems(): void {
+  private init(): void {
     this.#comboboxInputElem = this.shadowRoot?.getElementById('combobox__id-input') ?? null;
     this.#comboboxLabelElem = this.shadowRoot?.getElementById('combobox__id-label') ?? null;
     this.#comboboxListBoxElem = this.shadowRoot?.getElementById('combobox__id-list-box') ?? null;
+
     this.#optionElems = this.querySelectorAll<ComboboxOptionComponent>("combobox-option");
-    this.#optionInnerTexts = [...this.#optionElems].map(option => option.innerText);
-  }
 
-  private addOptions(): void {
-    assertExistElements(this.#optionElems);
-    assertExistElements(this.#comboboxListBoxElem);
-
+    this.#optionInnerTexts = [...this.optionElems].map(option => option.innerText);
     for (let option of this.#optionElems) {
-      this.#comboboxListBoxElem.appendChild(option)
+      this.comboboxListBoxElem.appendChild(option);
     }
 
-    this.#focusedOptionElem = this.#optionElems[this.#focusedOptionIndex];
-    this.#focusedOptionElem.classList.add('combobox__current')
+    this.#focusedOptionElem = this.optionElems[this.#focusedOptionIndex];
+    this.#focusedOptionElem.classList.add('combobox__current');
   }
 
   private addEventsToElements(): void {
-    assertExistElements(this.#comboboxInputElem);
-    assertExistElements(this.#comboboxLabelElem);
-    assertExistElements(this.#comboboxListBoxElem);
-
-    this.#comboboxInputElem.addEventListener(
+    this.comboboxInputElem.addEventListener(
       'click',
       this.onComboboxSelectInputClick.bind(this)
     );
-    this.#comboboxInputElem.addEventListener(
+    this.comboboxInputElem.addEventListener(
       'keydown',
       this.onComboboxSelectInputKeydown.bind(this)
     );
-    this.#comboboxInputElem.addEventListener(
+    this.comboboxInputElem.addEventListener(
       'blur',
       this.onComboboxBlurClick.bind(this)
     );
 
-    this.#comboboxLabelElem.addEventListener(
+    this.comboboxLabelElem.addEventListener(
       'click',
       this.onComboboxLabelClick.bind(this)
     );
 
-    this.#comboboxListBoxElem.addEventListener(
+    this.comboboxListBoxElem.addEventListener(
       'focusout',
       this.onComboboxBlurClick.bind(this)
     );
 
-    this.#optionElems && this.#optionElems.forEach((option, index) => {
+    this.optionElems.forEach((option, index) => {
       option.addEventListener('click', this.onOptionClick(index).bind(this));
     })
   }
 
   private updateMenuState(shouldOpen: boolean, callFocus = true): void {
-    assertExistElements(this.#comboboxInputElem);
-
     if (this.#isOpen === shouldOpen) {
       return;
     }
 
     this.#isOpen = shouldOpen;
 
-    this.#comboboxInputElem.setAttribute('aria-expanded', `${shouldOpen}`);
+    this.comboboxInputElem.setAttribute('aria-expanded', `${shouldOpen}`);
     shouldOpen ? this.classList.add('open') : this.classList.remove('open');
 
-    callFocus && this.#comboboxInputElem.focus();
+    callFocus && this.comboboxInputElem.focus();
   }
 
   private onComboboxSelectInputClick(): void {
@@ -244,10 +259,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxSelectInputKeydown(event: KeyboardEvent): void {
-    assertExistElements(this.#optionElems);
-
     const { key } = event;
-    const max = this.#optionElems.length - 1;
+    const max = this.optionElems.length - 1;
     const action = getActionFromKey(event, this.#isOpen);
 
     switch (action) {
@@ -277,10 +290,8 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxBlurClick(event: FocusEvent): void {
-    assertExistElements(this.#comboboxListBoxElem);
-
     // @ts-ignore
-    if (this.#comboboxListBoxElem.contains(event.relatedTarget)) {
+    if (this.comboboxListBoxElem.contains(event.relatedTarget)) {
       return;
     }
 
@@ -291,9 +302,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onComboboxLabelClick(): void {
-    assertExistElements(this.#comboboxInputElem);
-
-    this.#comboboxInputElem.focus();
+    this.comboboxInputElem.focus();
   }
 
   private onOptionClick(index: number) {
@@ -306,34 +315,27 @@ export class ComboboxWrapperComponent extends HTMLElement {
   }
 
   private onOptionChange(index: number) {
-    assertExistElements(this.#optionElems);
-    assertExistElements(this.#comboboxInputElem);
-    assertExistElements(this.#focusedOptionElem);
+    const option = this.optionElems[index];
 
-    const option = this.#optionElems[index];
-
-    this.#comboboxInputElem.setAttribute('aria-activedescendant', option.id);
-    this.#focusedOptionElem.classList.remove('combobox__current');
+    this.comboboxInputElem.setAttribute('aria-activedescendant', option.id);
+    this.focusedOptionElem.classList.remove('combobox__current');
     this.#focusedOptionElem = option;
     this.#focusedOptionIndex = index;
-    this.#focusedOptionElem.classList.add('combobox__current');
+    this.focusedOptionElem.classList.add('combobox__current');
 
-    if (isScrollable(this.#comboboxListBoxElem)) {
-      maintainScrollVisibility(option, this.#comboboxListBoxElem);
+    if (isScrollable(this.comboboxListBoxElem)) {
+      maintainScrollVisibility(option, this.comboboxListBoxElem);
     }
   };
 
   private onSelectOption(index: number) {
-    assertExistElements(this.#optionElems);
-    assertExistElements(this.#comboboxInputElem);
-
     this.#focusedOptionIndex = index;
-    const option = this.#optionElems[index];
+    const option = this.optionElems[index];
 
     this.#selectedOptionElem?.setSelected(false);
     option.setSelected(true);
     this.#selectedOptionElem = option;
-    this.#comboboxInputElem.innerHTML = option.innerHTML;
+    this.comboboxInputElem.innerHTML = option.innerHTML;
   };
 
   private onComboboxType(letter: string): void {
