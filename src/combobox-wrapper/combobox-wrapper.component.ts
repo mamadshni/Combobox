@@ -5,9 +5,14 @@ import {
   getUpdatedIndex,
   isScrollable,
   maintainScrollVisibility,
-} from './combobox.utils.ts';
-import { SelectActions } from './combobox.model.ts';
-import { ComboboxOptionComponent } from './combobox-option.component.ts';
+} from '../combobox.utils.ts';
+import { SelectActions } from '../combobox.model.ts';
+import { ComboboxOptionComponent } from '../combobox-option/combobox-option.component.ts';
+
+import css from './combobox-wrapper.component.css?inline';
+
+const styleSheet = new CSSStyleSheet();
+styleSheet.replaceSync(css)
 
 export class ComboboxWrapperComponent extends HTMLElement {
 
@@ -98,99 +103,6 @@ export class ComboboxWrapperComponent extends HTMLElement {
     return template;
   }
 
-  private get styles(): HTMLStyleElement {
-    const style = document.createElement('style');
-    style.innerHTML = `
-		:host *,
-		:host *::before,
-		:host *::after {
-  		box-sizing: border-box;
-		}
-
-		:host {
-  		display: flex;
-			flex-direction: column;
-			gap: 4px;
-  		max-width: 400px;
-			position: relative;
-		}
-
-		.combobox__input {
-  		display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: space-between;
-			gap: 16px;
-			
-  		min-height: calc(1.4em + 26px);
-			min-width: var(--combobox-min-width, 240px);
-			width: 100%;
-			
-  		background-color: #f5f5f5;
-  		border: 2px solid rgb(0 0 0 / 75%);
-  		border-radius: 4px;
-			
-  		font-size: 1em;
-  		padding: 12px 16px 14px;
-  		text-align: left;
-			cursor: pointer;
-		}
-		
-		.combobox__input::after {
-  		border-bottom: 2px solid rgb(0 0 0 / 75%);
-  		border-right: 2px solid rgb(0 0 0 / 75%);
-  		content: "";
-  		display: block;
-  		height: 12px;
-  		pointer-events: none;
-  		transform: translate(0, -25%) rotate(45deg);
-  		width: 12px;
-		}
-
-		:host(.open) .combobox__input {
-			border-radius: 4px 4px 0 0;
-		}
-
-		.combobox__input:focus {
-			border-color: #0067b8;
-			box-shadow: 0 0 4px 2px #0067b8;
-			outline: 4px solid transparent;
-		}
-
-		.combobox__label {
-			display: block;
-			font-weight: 100;
-			margin-bottom: 0.25em;
-			font-size: 1.2em;
-		}
-
-		.combobox__menu {
-			background-color: #f5f5f5;
-			border: 1px solid rgb(0 0 0 / 75%);
-			border-radius: 0 0 4px 4px;
-			display: none;
-			max-height: 300px;
-			overflow-y: scroll;
-			left: 0;
-			position: absolute;
-			top: 100%;
-			width: 100%;
-			z-index: 100;
-		}
-
-		:host(.open) .combobox__menu {
-		  display: flex;
-      flex-direction: column;
-		}
-
-    :host([disabled]) {
-      opacity: 0.6;
-      pointer-events: none;
-    }
-    `;
-    return style;
-  }
-
   private get comboLabel(): string {
     return this.getAttribute("label") || "Label";
   }
@@ -205,7 +117,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
   private render() {
     const shadowRoot = this.attachShadow({ mode: 'open' });
-    shadowRoot.appendChild(this.styles);
+    shadowRoot.adoptedStyleSheets = [styleSheet];
     shadowRoot.appendChild(this.template.content.cloneNode(true));
     this.init();
     this.addEventsToElements();
