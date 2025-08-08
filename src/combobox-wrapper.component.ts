@@ -69,11 +69,11 @@ export class ComboboxWrapperComponent extends HTMLElement {
   private get template(): HTMLTemplateElement {
     const template = document.createElement('template');
     template.innerHTML = `
-			  <div 
+			  <label 
 			    class="combobox__label" 
 					id="combobox__id-label">
 				  ${this.comboLabel}
-				</div>
+				</label>
 				
   			<div 
 					class="combobox__input" 
