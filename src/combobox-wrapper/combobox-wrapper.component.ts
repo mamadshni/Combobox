@@ -186,7 +186,14 @@ export class ComboboxWrapperComponent extends HTMLElement {
     this.#isOpen = shouldOpen;
 
     this.comboboxInputElem.setAttribute('aria-expanded', `${shouldOpen}`);
-    shouldOpen ? this.classList.add('open') : this.classList.remove('open');
+
+    if (shouldOpen) {
+      this.classList.add('open')
+      this.comboboxInputElem.setAttribute('aria-activedescendant', this.focusedOptionElem.id);
+    } else {
+      this.classList.remove('open');
+      this.comboboxInputElem.setAttribute('aria-activedescendant', '');
+    }
 
     callFocus && this.comboboxInputElem.focus();
   }
