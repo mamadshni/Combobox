@@ -4,15 +4,13 @@ import {
   getIndexByLetter,
   getUpdatedIndex,
   isScrollable,
-  maintainScrollVisibility,
+  maintainScrollVisibility
 } from '../combobox.utils.ts';
 import { SelectActions } from '../combobox.model.ts';
 import { ComboboxOptionComponent } from '../combobox-option/combobox-option.component.ts';
 
-import css from './combobox-wrapper.component.css?inline';
-
-const styleSheet = new CSSStyleSheet();
-styleSheet.replaceSync(css)
+import css from './combobox-wrapper.component.css?raw';
+import html from './combobox-wrapper.component.html?raw';
 
 export class ComboboxWrapperComponent extends HTMLElement {
 
@@ -73,34 +71,17 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
   private get template(): HTMLTemplateElement {
     const template = document.createElement('template');
-    template.innerHTML = `
-			  <label 
-			    class="combobox__label" 
-					id="combobox__id-label">
-				  ${this.comboLabel}
-				</label>
-				
-  			<div 
-					class="combobox__input" 
-					id="combobox__id-input"
-					role="combobox" 
-					tabindex="0"
-					aria-controls="combobox__id-list-box" 
-					aria-expanded="false" 
-					aria-haspopup="listbox" 
-					aria-labelledby="combobox__id-label" >
-					${this.comboPlaceholder}
-				</div>
-				
-				<div 
-					class="combobox__menu" 
-					id="combobox__id-list-box"
-					role="listbox" 
-					tabindex="-1"
-					aria-labelledby="combobox__id-label" >
-				</div>
-		`
+    template.innerHTML = html
+      .replace('{{comboLabel}}', this.comboLabel)
+      .replace('{{comboPlaceholder}}', this.comboPlaceholder);
     return template;
+  }
+
+  private get styles(): CSSStyleSheet[] {
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.replaceSync(css)
+
+    return [styleSheet]
   }
 
   private get comboLabel(): string {
@@ -117,7 +98,7 @@ export class ComboboxWrapperComponent extends HTMLElement {
 
   private render() {
     const shadowRoot = this.attachShadow({ mode: 'open' });
-    shadowRoot.adoptedStyleSheets = [styleSheet];
+    shadowRoot.adoptedStyleSheets = this.styles;
     shadowRoot.appendChild(this.template.content.cloneNode(true));
     this.init();
     this.addEventsToElements();
